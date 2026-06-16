@@ -7,6 +7,7 @@
     "clean-allure": "rimraf allure-results allure-report",
     "Single-Data": "npx playwright test tests/HRMSingleData.spec.ts",
     "Multiple-Json": "npx playwright test tests/MultipleDataUsingJson.spec.ts",
+    "Multiple-Excel": "npx playwright test tests/MultipleDataExcel.spec.ts",
     "Allure-report": "allure serve allure-results",
     "All-Test": "npx playwright test"
   },
