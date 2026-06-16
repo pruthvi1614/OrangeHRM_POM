@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "bundler",
+    "types": ["node", "@playwright/test"],
+    "esModuleInterop": true,
+    "strict": true,
+    "resolveJsonModule": true
+  }
+}
