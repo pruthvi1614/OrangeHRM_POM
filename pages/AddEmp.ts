@@ -32,30 +32,40 @@ export class AddEmp {
         await this.clickPim.click()
         await expect(this.clickAdd).toBeVisible({ timeout: 30000 })
         await expect(this.clickAdd).toBeEnabled({ timeout: 30000 })
+        await this.page.locator('.modal-backdrop, .loading-mask, .spinner, .overlay').waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {})
         await this.clickAdd.click()
 
-        await this.firstName.waitFor({ state: 'visible' })
+        await this.page.waitForLoadState('domcontentloaded')
+        if (!(await this.firstName.isVisible())) {
+            await this.page.waitForTimeout(500)
+            if (!(await this.firstName.isVisible())) {
+                await this.clickAdd.click({ force: true })
+            }
+        }
+
+        await this.firstName.waitFor({ state: 'visible', timeout: 30000 })
         await this.firstName.fill(String(firstName || ""))
-        await this.middleName.waitFor({ state: 'visible' })
+        await this.middleName.waitFor({ state: 'visible', timeout: 30000 })
         await this.middleName.fill(String(middleName || ""))
-        await this.lastName.waitFor({ state: 'visible' })
+        await this.lastName.waitFor({ state: 'visible', timeout: 30000 })
         await this.lastName.fill(String(lastName || ""))
 
-        await expect(this.employeeId).toBeVisible();
-        await expect(this.employeeId).toHaveValue(/\d+/, { timeout: 30000 });
+        await expect(this.employeeId).toBeVisible({ timeout: 30000 })
+        await expect(this.employeeId).toHaveValue(/\d+/, { timeout: 30000 })
         const expectEmpId = await this.employeeId.inputValue()
+        await this.clickSave.waitFor({ state: 'visible', timeout: 30000 })
         await this.clickSave.click()
+
         // Wait briefly for duplicate ID message
         if (await this.duplicateError.isVisible({ timeout: 5000 }).catch(() => false)) {
-            const screenshot = await this.page.screenshot({ fullPage: true });
-            // Attach the screenshot to the Allure report
-            await allure.attachment('Duplicate Employee ID Error', screenshot, 'image/png');
-            console.log(`Employee ID already exists: ${expectEmpId}`);
+            const screenshot = await this.page.screenshot({ fullPage: true })
+            await allure.attachment('Duplicate Employee ID Error', screenshot, 'image/png')
+            console.log(`Employee ID already exists: ${expectEmpId}`)
             throw new Error(`Employee ID already exists: ${expectEmpId}`)
         }
+
         await expect(this.displayPersonalId).toBeVisible({ timeout: 30000 })
         const actualEmpId = await this.displayPersonalId.inputValue()
-        //console.log("Actual Employee ID: " + actualEmpId)
         expect(expectEmpId).toBe(actualEmpId)
         return actualEmpId
     }
