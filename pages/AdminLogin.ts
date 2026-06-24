@@ -38,12 +38,19 @@ export class AdminLogin {
 
     //method for logout
     async HRMLogout() {
+        if (this.page.url().includes('/auth/login')) {
+            return
+        }
         await this.page.locator('.modal-backdrop, .loading-mask, .spinner, .overlay, .modal-backdrop.in').waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {})
-        await this.welcomeMenu.waitFor({ state: 'visible', timeout: 20000 })
-        await this.welcomeMenu.click()
-        await this.page.waitForTimeout(300)
-        await this.logout.waitFor({ state: 'visible', timeout: 20000 })
-        await this.logout.click()
+        await this.welcomeMenu.waitFor({ state: 'visible', timeout: 20000 }).catch(() => null)
+        if (!(await this.welcomeMenu.isVisible())) {
+            return
+        }
+        await this.welcomeMenu.click({ force: true })
+        await this.page.waitForTimeout(500)
+        if (await this.logout.isVisible()) {
+            await this.logout.click({ force: true })
+        }
     }
 
 }
