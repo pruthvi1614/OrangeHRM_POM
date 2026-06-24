@@ -12,6 +12,8 @@ export class Admin_Qualifications {
     readonly memberships: Locator
     readonly addBtn: Locator
     readonly deleteBtn: Locator
+    readonly deleteMembershipBtn: Locator
+    readonly deleteConfirmBtn: Locator
     readonly skillName: Locator
     readonly skillDescription: Locator
     readonly saveBtn: Locator
@@ -20,7 +22,11 @@ export class Admin_Qualifications {
     readonly licenseName: Locator
     readonly languageName: Locator
     readonly membershipName: Locator
-
+    readonly duplicateSkillErrorMsg: Locator
+    readonly duplicateLevelError: Locator
+    readonly duplicateLicenseError: Locator
+    readonly duplicateLanguageError: Locator
+    readonly duplicateMembershipError: Locator
 
     constructor(page: Page) {
         this.page = page
@@ -33,6 +39,8 @@ export class Admin_Qualifications {
         this.memberships = page.getByRole('link', { name: 'Memberships' })
         this.addBtn = page.getByRole('button', { name: 'Add' })
         this.deleteBtn = page.getByRole('button', { name: 'Delete' })
+        this.deleteMembershipBtn = page.locator('#btnDelete')
+        this.deleteConfirmBtn = page.getByRole('button',{name:'Ok'})
         this.skillName = page.locator('#skill_name')
         this.skillDescription = page.locator('#skill_description')
         this.saveBtn = page.getByRole('button', { name: 'Save' })
@@ -41,45 +49,180 @@ export class Admin_Qualifications {
         this.licenseName = page.locator('#license_name')
         this.languageName = page.locator('#language_name')
         this.membershipName = page.locator('#membership_name')
+        this.duplicateSkillErrorMsg = page.getByText('Already exists', { exact: true })
+        this.duplicateLevelError = page.getByText('Level Already Exists Close')
+        this.duplicateLicenseError = page.getByText('Name Already Exists Close')
+        this.duplicateLanguageError = page.getByText('Name Already Exists Close')
+        this.duplicateMembershipError = page.getByText('Already exists', { exact: true })
     }
 
     async navToSkillsPage() {
+        await this.clickAdmin.waitFor({ state: 'visible' })
         await this.clickAdmin.click()
+        await this.qualifications.waitFor({ state: 'visible' })
         await this.qualifications.hover()
+        await this.skills.waitFor({ state: 'visible' })
         await this.skills.click()
         await this.addBtn.waitFor({ state: 'visible' })
         await expect(this.addBtn).toBeVisible()
     }
 
-    async addSkills(skillName: String, skillDescription: String) {
+    async navToEducationPage() {
+        await this.clickAdmin.waitFor({ state: 'visible' })
+        await this.clickAdmin.click()
+        await this.qualifications.waitFor({ state: 'visible' })
+        await this.qualifications.hover()
+        await this.education.waitFor({ state: 'visible' })
+        await this.education.click()
+        await this.addBtn.waitFor({ state: 'visible' })
+        await expect(this.addBtn).toBeVisible()
+    }
+
+    async navToLicensesPage() {
+        await this.clickAdmin.waitFor({ state: 'visible' })
+        await this.clickAdmin.click()
+        await this.qualifications.waitFor({ state: 'visible' })
+        await this.qualifications.hover()
+        await this.licenses.waitFor({ state: 'visible' })
+        await this.licenses.click()
+        await this.addBtn.waitFor({ state: 'visible' })
+        await expect(this.addBtn).toBeVisible()
+    }
+
+    async navToLanguagesPage() {
+        await this.clickAdmin.waitFor({ state: 'visible' })
+        await this.clickAdmin.click()
+        await this.qualifications.waitFor({ state: 'visible' })
+        await this.qualifications.hover()
+        await this.languages.waitFor({ state: 'visible' })
+        await this.languages.click()
+        await this.addBtn.waitFor({ state: 'visible' })
+        await expect(this.addBtn).toBeVisible()
+    }
+
+    async navToMembershipsPage() {
+        await this.clickAdmin.waitFor({ state: 'visible' })
+        await this.clickAdmin.click()
+        await this.qualifications.waitFor({ state: 'visible' })
+        await this.qualifications.hover()
+        await this.memberships.waitFor({ state: 'visible' })
+        await this.memberships.click()
+        await this.addBtn.waitFor({ state: 'visible' })
+        await expect(this.addBtn).toBeVisible()
+    }
+
+    async addSkills(skillName: string, skillDescription: string) {
+        await this.addBtn.waitFor({ state: 'visible' })
         await this.addBtn.click()
-        await this.skillName.fill(String(skillName))
-        await this.skillDescription.fill(String(skillDescription))
+        await this.skillName.waitFor({ state: 'visible' })
+        await this.skillName.fill(skillName)
+        await this.skillDescription.waitFor({ state: 'visible' })
+        await this.skillDescription.fill(skillDescription)
+        await this.saveBtn.waitFor({ state: 'visible' })
         await this.saveBtn.click()
-        
-
     }
 
-    async vadilateSaveSuccessfully(skillName: String) {
-        await expect(this.page.getByText('Successfully Saved Close')).toContainText("Successfully Saved")
+    async vadilateSaveSuccessfully(skillName: string) {
+        const savedMessage = this.page.getByText('Successfully Saved Close')
+        await expect(savedMessage).toBeVisible()
+        await expect(savedMessage).toContainText('Successfully Saved')
         console.log(`Saved record: ${skillName}`)
-        //await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(1) //works as containes text
-        await expect(this.page.locator(`a:text-is("${skillName}")`)).toHaveCount(1) //matches exact record
+        await expect(this.page.locator(`a:text-is("${skillName}")`)).toHaveCount(1)
     }
 
-    async deleteRecord(skillName: String) {
+    async deleteRecord(skillName: string) {
         const row = this.page.locator('tr').filter({ hasText: `${skillName}` })
-        await row.locator('.checkboxAtch').check()
+        await row.waitFor({ state: 'visible' })
+        const checkbox = row.locator('.checkboxAtch')
+        await checkbox.waitFor({ state: 'visible' })
+        await checkbox.check()
+        await this.deleteBtn.waitFor({ state: 'visible' })
         await this.deleteBtn.click()
-        
     }
 
-    async vadilateDeleteSuccessfully(skillName: String) {
-        await expect(this.page.getByText('Successfully Deleted Close')).toContainText("Successfully Deleted")
+    async deleteMembershipRecord(skillName: string) {
+        const row = this.page.locator('tr').filter({ hasText: `${skillName}` })
+        await row.waitFor({ state: 'visible' })
+        const checkbox = row.locator('input[type="checkbox"]')
+        await checkbox.waitFor({ state: 'visible' })
+        await checkbox.check()
+        await this.deleteMembershipBtn.waitFor({ state: 'visible' })
+        await this.deleteMembershipBtn.click()
+        await this.deleteConfirmBtn.click()
+    }
+
+    async clickCancelBtn(){
+        this.cancelBtn.waitFor({ state: 'visible' })
+        this.cancelBtn.click()
+    }
+
+    async vadilateDeleteSuccessfully(skillName: string) {
+        const deletedMessage = this.page.getByText('Successfully Deleted Close')
+        await expect(deletedMessage).toBeVisible({ timeout: 15000 })
+        await expect(deletedMessage).toContainText('Successfully Deleted')
         console.log(`Deleted record: ${skillName}`)
         await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(0)
-        // const allRows = await this.page.locator('tbody tr').allTextContents()
-        // console.log(allRows)
-        // await expect(allRows).not.toContain(expect.stringContaining(`${skillName}`))
+    }
+
+    async skillAlreadyExistiMsg() {
+        await expect(this.duplicateSkillErrorMsg).toBeVisible({ timeout: 15000 })
+    }
+
+    async levelAlreadyExistiMsg() {
+        await expect(this.duplicateLevelError).toBeVisible()
+        await expect(this.duplicateLevelError).toContainText('Level Already Exists')
+    }
+
+    async licenseAlreadyExistiMsg() {
+        await expect(this.duplicateLicenseError).toBeVisible()
+        await expect(this.duplicateLicenseError).toContainText('Name Already Exists')
+    }
+
+    async languagesAlreadyExistiMsg() {
+        await expect(this.duplicateLanguageError).toBeVisible()
+        await expect(this.duplicateLanguageError).toContainText('Name Already Exists')
+    }
+
+    async membershipsAlreadyExistiMsg() {
+        await expect(this.duplicateMembershipError).toBeVisible()
+        await expect(this.duplicateMembershipError).toContainText('Already exists')
+    }
+
+    async addEducationLevel(educationLevel: string) {
+        await this.addBtn.waitFor({ state: 'visible' })
+        await this.addBtn.click()
+        await this.educationLevel.waitFor({ state: 'visible' })
+        await this.educationLevel.fill(educationLevel)
+        await this.saveBtn.waitFor({ state: 'visible' })
+        await this.saveBtn.click()
+    }
+
+    async addLicense(licenseName: string) {
+        await this.addBtn.waitFor({ state: 'visible' })
+        await this.addBtn.click()
+        await this.licenseName.waitFor({ state: 'visible' })
+        await this.licenseName.fill(licenseName)
+        await this.saveBtn.waitFor({ state: 'visible' })
+        await this.saveBtn.click()
+    }
+
+    async addLanguage(languageName: string) {
+        await this.addBtn.waitFor({ state: 'visible' })
+        await this.addBtn.click()
+        await this.languageName.waitFor({ state: 'visible' })
+        await this.languageName.fill(languageName)
+        await this.saveBtn.waitFor({ state: 'visible' })
+        await this.saveBtn.click()
+    }
+
+    async addMembership(membershipName: string) {
+        await this.addBtn.waitFor({ state: 'visible' })
+        await this.addBtn.click()
+        await this.membershipName.waitFor({ state: 'visible' })
+        await this.membershipName.fill(membershipName)
+        await this.saveBtn.waitFor({ state: 'visible' })
+        await this.saveBtn.click()
+        const savedMessage = this.page.getByText('Successfully Saved Close')
+        await expect(savedMessage).toBeVisible({ timeout: 15000 })
     }
 }
