@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
-    "moduleResolution": "bundler",
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "types": ["node", "@playwright/test"],
     "esModuleInterop": true,
     "strict": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": ["tests/**/*.ts", "pages/**/*.ts", "utils/**/*.ts"]
 }
