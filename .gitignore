@@ -6,6 +6,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+allure-results/
 
 #git update-index --skip-worktree playwright.config.ts //to skip file from git track and git commit
 #git update-index --no-skip-worktree playwright.config.ts //Git to track changes again
