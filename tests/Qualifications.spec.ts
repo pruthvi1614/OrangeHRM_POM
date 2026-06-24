@@ -168,6 +168,10 @@ test.describe("HRM Admin Qualifications module", () => {
 
 
     test.afterEach(async () => {
-        await login.HRMLogout()
+        try {
+            await login.HRMLogout()
+        } catch (error) {
+            console.warn('Cleanup logout failed:', error)
+        }
     })
 })

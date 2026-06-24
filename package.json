@@ -9,7 +9,8 @@
     "Multiple-Json": "npx playwright test tests/MultipleDataUsingJson.spec.ts",
     "Multiple-Excel": "npx playwright test tests/MultipleDataExcel.spec.ts",
     "Allure-report": "allure serve allure-results",
-    "All-Test": "npx playwright test"
+    "All-Test": "npx playwright test",
+    "Qualifications": "npx playwright test tests/Qualifications.spec.ts"
   },
   "keywords": [],
   "author": "",
