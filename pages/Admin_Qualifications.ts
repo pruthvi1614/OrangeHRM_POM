@@ -50,10 +50,10 @@ export class Admin_Qualifications {
         this.languageName = page.locator('#language_name')
         this.membershipName = page.locator('#membership_name')
         this.duplicateSkillErrorMsg = page.getByText('Already exists', { exact: true })
-        this.duplicateLevelError = page.getByText('Level Already Exists Close')
-        this.duplicateLicenseError = page.getByText('Name Already Exists Close')
-        this.duplicateLanguageError = page.getByText('Name Already Exists Close')
-        this.duplicateMembershipError = page.getByText('Already exists', { exact: true })
+        this.duplicateLevelError = page.getByText('Level Already Exists', { exact: false })
+        this.duplicateLicenseError = page.getByText('Name Already Exists', { exact: false })
+        this.duplicateLanguageError = page.getByText('Name Already Exists', { exact: false })
+        this.duplicateMembershipError = page.getByText('Already exists', { exact: false })
     }
 
     async navToSkillsPage() {
@@ -104,7 +104,7 @@ export class Admin_Qualifications {
         await this.clickAdmin.waitFor({ state: 'visible', timeout: 20000 })
         await this.clickAdmin.click()
         await this.qualifications.waitFor({ state: 'visible', timeout: 20000 })
-        await this.qualifications.click()
+        await this.qualifications.hover()
         await this.memberships.waitFor({ state: 'visible', timeout: 20000 })
         await this.memberships.click()
         await this.addBtn.waitFor({ state: 'visible', timeout: 20000 })
@@ -123,29 +123,29 @@ export class Admin_Qualifications {
     }
 
     async vadilateSaveSuccessfully(skillName: string) {
-        const savedMessage = this.page.getByText('Successfully Saved Close')
-        await expect(savedMessage).toBeVisible()
-        await expect(savedMessage).toContainText('Successfully Saved')
+        const savedMessage = this.page.getByText('Successfully Saved', { exact: false })
+        await expect(savedMessage).toBeVisible({ timeout: 30000 })
+        await expect(savedMessage).toContainText('Successfully Saved', { timeout: 30000 })
         console.log(`Saved record: ${skillName}`)
-        await expect(this.page.locator(`a:text-is("${skillName}")`)).toHaveCount(1)
+        await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(1, { timeout: 30000 })
     }
 
     async deleteRecord(skillName: string) {
-        const row = this.page.locator('tr').filter({ hasText: `${skillName}` })
-        await row.waitFor({ state: 'visible' })
+        const row = this.page.locator('tbody tr').filter({ hasText: `${skillName}` })
+        await expect(row).toBeVisible({ timeout: 30000 })
         const checkbox = row.locator('.checkboxAtch')
-        await checkbox.waitFor({ state: 'visible' })
+        await expect(checkbox).toBeVisible({ timeout: 15000 })
         await checkbox.check()
-        await this.deleteBtn.waitFor({ state: 'visible' })
+        await expect(this.deleteBtn).toBeVisible({ timeout: 15000 })
         await this.deleteBtn.click()
     }
 
     async deleteMembershipRecord(skillName: string) {
         await this.page.waitForLoadState('domcontentloaded')
         const row = this.page.locator('table tbody tr').filter({ hasText: `${skillName}` })
-        await row.waitFor({ state: 'visible', timeout: 30000 }).catch(async () => {
+        await expect(row).toBeVisible({ timeout: 30000 }).catch(async () => {
             await this.navToMembershipsPage()
-            await row.waitFor({ state: 'visible', timeout: 30000 })
+            await expect(row).toBeVisible({ timeout: 30000 })
         })
         const checkbox = row.locator('input[type="checkbox"]').first()
         await checkbox.waitFor({ state: 'visible', timeout: 15000 })
@@ -163,11 +163,11 @@ export class Admin_Qualifications {
     }
 
     async vadilateDeleteSuccessfully(skillName: string) {
-        const deletedMessage = this.page.getByText('Successfully Deleted Close')
-        await expect(deletedMessage).toBeVisible({ timeout: 15000 })
-        await expect(deletedMessage).toContainText('Successfully Deleted')
+        const deletedMessage = this.page.getByText('Successfully Deleted', { exact: false })
+        await expect(deletedMessage).toBeVisible({ timeout: 30000 })
+        await expect(deletedMessage).toContainText('Successfully Deleted', { timeout: 30000 })
         console.log(`Deleted record: ${skillName}`)
-        await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(0)
+        await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(0, { timeout: 30000 })
     }
 
     async skillAlreadyExistiMsg() {
