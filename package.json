@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "clean-allure": "rimraf allure-results allure-report",
+    "clean-allure": "rimraf allure-results allure-report test-results test-summary.txt test-reports",
     "Single-Data": "npx playwright test tests/HRMSingleData.spec.ts",
     "Multiple-Json": "npx playwright test tests/MultipleDataUsingJson.spec.ts",
     "Multiple-Excel": "npx playwright test tests/MultipleDataExcel.spec.ts",
