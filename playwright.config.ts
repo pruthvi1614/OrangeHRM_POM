@@ -5,9 +5,9 @@ import { defineConfig, devices } from '@playwright/test';
  * https://github.com/motdotla/dotenv
  */
 import dotenv from 'dotenv';
- import path from 'path';
- //to read '.env' file.
- dotenv.config({ path: path.resolve(__dirname, './utils/environment.env') });
+import path from 'path';
+//to read '.env' file.
+dotenv.config({ path: path.resolve(__dirname, './utils/environment.env') });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -23,17 +23,27 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html'],['line'],["allure-playwright"] ],
+  timeout: 60000,
+  expect: {
+    timeout: 30000,
+  },
+  reporter: [['html',
+    { outputFolder: 'test-reports/playwright-report', open: 'never' }],
+  ['line'], ['allure-playwright'],
+  ['json', { outputFile: 'test-results/results.json' }] ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    // baseURL: 'http://localhost:3000',
+    baseURL: process.env.Base_Url ?? undefined,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    headless: true,
+    headless: process.env.CI ? true : false,
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    actionTimeout: 30000,
+    navigationTimeout: 60000,
+    ignoreHTTPSErrors: true,
   },
 
   /* Configure projects for major browsers */
