@@ -123,7 +123,7 @@ export class Admin_Qualifications {
     }
 
     async vadilateSaveSuccessfully(skillName: string) {
-        const savedMessage = this.page.getByText('Successfully Saved', { exact: false })
+        const savedMessage = this.page.getByText('Successfully Saved Close', { exact: true })
         await expect(savedMessage).toBeVisible({ timeout: 30000 })
         await expect(savedMessage).toContainText('Successfully Saved', { timeout: 30000 })
         console.log(`Saved record: ${skillName}`)
@@ -163,7 +163,7 @@ export class Admin_Qualifications {
     }
 
     async vadilateDeleteSuccessfully(skillName: string) {
-        const deletedMessage = this.page.getByText('Successfully Deleted', { exact: false })
+        const deletedMessage = this.page.getByText('Successfully Deleted Close', { exact: true })
         await expect(deletedMessage).toBeVisible({ timeout: 30000 })
         await expect(deletedMessage).toContainText('Successfully Deleted', { timeout: 30000 })
         console.log(`Deleted record: ${skillName}`)
