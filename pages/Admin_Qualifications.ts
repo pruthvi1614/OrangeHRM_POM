@@ -27,6 +27,8 @@ export class Admin_Qualifications {
     readonly duplicateLicenseError: Locator
     readonly duplicateLanguageError: Locator
     readonly duplicateMembershipError: Locator
+    readonly saveSuccessMsg: Locator
+    readonly deleteSuccessMsg: Locator
 
     constructor(page: Page) {
         this.page = page
@@ -40,7 +42,7 @@ export class Admin_Qualifications {
         this.addBtn = page.getByRole('button', { name: 'Add' })
         this.deleteBtn = page.getByRole('button', { name: 'Delete' })
         this.deleteMembershipBtn = page.locator('#btnDelete')
-        this.deleteConfirmBtn = page.getByRole('button',{name:'Ok'})
+        this.deleteConfirmBtn = page.getByRole('button', { name: 'Ok' })
         this.skillName = page.locator('#skill_name')
         this.skillDescription = page.locator('#skill_description')
         this.saveBtn = page.getByRole('button', { name: 'Save' })
@@ -54,6 +56,8 @@ export class Admin_Qualifications {
         this.duplicateLicenseError = page.getByText('Name Already Exists', { exact: false })
         this.duplicateLanguageError = page.getByText('Name Already Exists', { exact: false })
         this.duplicateMembershipError = page.getByText('Already exists', { exact: false })
+        this.saveSuccessMsg = page.getByText('Successfully Saved Close', { exact: true })
+        this.deleteSuccessMsg = page.getByText('Successfully Deleted Close', { exact: true })
     }
 
     async navToSkillsPage() {
@@ -123,9 +127,8 @@ export class Admin_Qualifications {
     }
 
     async vadilateSaveSuccessfully(skillName: string) {
-        const savedMessage = this.page.getByText('Successfully Saved Close', { exact: true })
-        await expect(savedMessage).toBeVisible({ timeout: 30000 })
-        await expect(savedMessage).toContainText('Successfully Saved', { timeout: 30000 })
+        await expect(this.saveSuccessMsg).toBeVisible({ timeout: 30000 })
+        await expect(this.saveSuccessMsg).toContainText('Successfully Saved', { timeout: 30000 })
         console.log(`Saved record: ${skillName}`)
         await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(1, { timeout: 30000 })
     }
@@ -163,9 +166,8 @@ export class Admin_Qualifications {
     }
 
     async vadilateDeleteSuccessfully(skillName: string) {
-        const deletedMessage = this.page.getByText('Successfully Deleted Close', { exact: true })
-        await expect(deletedMessage).toBeVisible({ timeout: 30000 })
-        await expect(deletedMessage).toContainText('Successfully Deleted', { timeout: 30000 })
+        await expect(this.deleteSuccessMsg).toBeVisible({ timeout: 30000 })
+        await expect(this.deleteSuccessMsg).toContainText('Successfully Deleted', { timeout: 30000 })
         console.log(`Deleted record: ${skillName}`)
         await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(0, { timeout: 30000 })
     }
