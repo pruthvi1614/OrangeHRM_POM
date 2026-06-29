@@ -132,7 +132,7 @@ export class Admin_Qualifications {
 
     async deleteRecord(skillName: string) {
         const row = this.page.locator('tbody tr').filter({ hasText: `${skillName}` })
-        await expect(row).toBeVisible({ timeout: 30000 })
+        await expect(row).toBeVisible({ timeout: 25000 })
         const checkbox = row.locator('.checkboxAtch')
         await expect(checkbox).toBeVisible({ timeout: 15000 })
         await checkbox.check()
