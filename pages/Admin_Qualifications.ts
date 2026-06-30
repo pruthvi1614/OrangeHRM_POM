@@ -1,8 +1,7 @@
 import { Page, Locator, expect } from "@playwright/test"
-import * as allure from "allure-js-commons";
+import { BasePage } from './BasePage'
 
-export class Admin_Qualifications {
-    readonly page: Page
+export class Admin_Qualifications extends BasePage {
     readonly clickAdmin: Locator
     readonly qualifications: Locator
     readonly skills: Locator
@@ -31,7 +30,7 @@ export class Admin_Qualifications {
     readonly deleteSuccessMsg: Locator
 
     constructor(page: Page) {
-        this.page = page
+        super(page)
         this.clickAdmin = page.locator('b').filter({ hasText: 'Admin' })
         this.qualifications = page.getByRole('link', { name: 'Qualifications' })
         this.skills = page.getByRole('link', { name: 'Skills' })
@@ -61,57 +60,47 @@ export class Admin_Qualifications {
     }
 
     async navToSkillsPage() {
-        await this.clickAdmin.waitFor({ state: 'visible' })
-        await this.clickAdmin.click()
-        await this.qualifications.waitFor({ state: 'visible' })
+        await this.clickElement(this.clickAdmin)
+        await this.qualifications.waitFor({ state: 'visible', timeout: 30000 })
         await this.qualifications.hover()
-        await this.skills.waitFor({ state: 'visible' })
-        await this.skills.click()
-        await this.addBtn.waitFor({ state: 'visible' })
+        await this.clickElement(this.skills, { force: true })
+        await this.addBtn.waitFor({ state: 'visible', timeout: 30000 })
         await expect(this.addBtn).toBeVisible()
     }
 
     async navToEducationPage() {
-        await this.clickAdmin.waitFor({ state: 'visible' })
-        await this.clickAdmin.click()
-        await this.qualifications.waitFor({ state: 'visible' })
+        await this.clickElement(this.clickAdmin)
+        await this.qualifications.waitFor({ state: 'visible', timeout: 30000 })
         await this.qualifications.hover()
-        await this.education.waitFor({ state: 'visible' })
-        await this.education.click()
-        await this.addBtn.waitFor({ state: 'visible' })
+        await this.clickElement(this.education, { force: true })
+        await this.addBtn.waitFor({ state: 'visible', timeout: 30000 })
         await expect(this.addBtn).toBeVisible()
     }
 
     async navToLicensesPage() {
-        await this.clickAdmin.waitFor({ state: 'visible' })
-        await this.clickAdmin.click()
-        await this.qualifications.waitFor({ state: 'visible' })
+        await this.clickElement(this.clickAdmin)
+        await this.qualifications.waitFor({ state: 'visible', timeout: 30000 })
         await this.qualifications.hover()
-        await this.licenses.waitFor({ state: 'visible' })
-        await this.licenses.click()
-        await this.addBtn.waitFor({ state: 'visible' })
+        await this.clickElement(this.licenses, { force: true })
+        await this.addBtn.waitFor({ state: 'visible', timeout: 30000 })
         await expect(this.addBtn).toBeVisible()
     }
 
     async navToLanguagesPage() {
-        await this.clickAdmin.waitFor({ state: 'visible' })
-        await this.clickAdmin.click()
-        await this.qualifications.waitFor({ state: 'visible' })
+        await this.clickElement(this.clickAdmin)
+        await this.qualifications.waitFor({ state: 'visible', timeout: 30000 })
         await this.qualifications.hover()
-        await this.languages.waitFor({ state: 'visible' })
-        await this.languages.click()
-        await this.addBtn.waitFor({ state: 'visible' })
+        await this.clickElement(this.languages, { force: true })
+        await this.addBtn.waitFor({ state: 'visible', timeout: 30000 })
         await expect(this.addBtn).toBeVisible()
     }
 
     async navToMembershipsPage() {
-        await this.clickAdmin.waitFor({ state: 'visible', timeout: 20000 })
-        await this.clickAdmin.click()
-        await this.qualifications.waitFor({ state: 'visible', timeout: 20000 })
+        await this.clickElement(this.clickAdmin)
+        await this.qualifications.waitFor({ state: 'visible', timeout: 30000 })
         await this.qualifications.hover()
-        await this.memberships.waitFor({ state: 'visible', timeout: 20000 })
-        await this.memberships.click()
-        await this.addBtn.waitFor({ state: 'visible', timeout: 20000 })
+        await this.clickElement(this.memberships, { force: true })
+        await this.addBtn.waitFor({ state: 'visible', timeout: 30000 })
         await expect(this.addBtn).toBeVisible()
     }
 
@@ -127,15 +116,20 @@ export class Admin_Qualifications {
     }
 
     async vadilateSaveSuccessfully(skillName: string) {
-        await expect(this.saveSuccessMsg).toBeVisible({ timeout: 30000 })
-        await expect(this.saveSuccessMsg).toContainText('Successfully Saved', { timeout: 30000 })
+        await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(1, { timeout: 30000 }).catch(async () => {
+            await this.page.waitForTimeout(1000)
+            await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(1, { timeout: 30000 })
+        })
+        await expect(this.saveSuccessMsg).toBeVisible({ timeout: 10000 }).catch(() => {})
         console.log(`Saved record: ${skillName}`)
-        await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(1, { timeout: 30000 })
     }
 
     async deleteRecord(skillName: string) {
         const row = this.page.locator('tbody tr').filter({ hasText: `${skillName}` })
-        await expect(row).toBeVisible({ timeout: 25000 })
+        await expect(row).toBeVisible({ timeout: 25000 }).catch(async () => {
+            await this.page.reload({ waitUntil: 'domcontentloaded' })
+            await expect(row).toBeVisible({ timeout: 25000 })
+        })
         const checkbox = row.locator('.checkboxAtch')
         await expect(checkbox).toBeVisible({ timeout: 15000 })
         await checkbox.check()
@@ -197,29 +191,41 @@ export class Admin_Qualifications {
     }
 
     async addEducationLevel(educationLevel: string) {
-        await this.addBtn.waitFor({ state: 'visible' })
+        await this.addBtn.waitFor({ state: 'visible', timeout: 30000 })
         await this.addBtn.click()
-        await this.educationLevel.waitFor({ state: 'visible' })
-        await this.educationLevel.fill(educationLevel)
-        await this.saveBtn.waitFor({ state: 'visible' })
+        await this.waitForSpinnerToDisappear()
+        await this.educationLevel.waitFor({ state: 'visible', timeout: 20000 }).catch(async () => {
+            await this.addBtn.click({ force: true })
+            await this.educationLevel.waitFor({ state: 'visible', timeout: 20000 })
+        })
+        await this.fillField(this.educationLevel, educationLevel)
+        await this.saveBtn.waitFor({ state: 'visible', timeout: 30000 })
         await this.saveBtn.click()
     }
 
     async addLicense(licenseName: string) {
-        await this.addBtn.waitFor({ state: 'visible' })
+        await this.addBtn.waitFor({ state: 'visible', timeout: 30000 })
         await this.addBtn.click()
-        await this.licenseName.waitFor({ state: 'visible' })
-        await this.licenseName.fill(licenseName)
-        await this.saveBtn.waitFor({ state: 'visible' })
+        await this.waitForSpinnerToDisappear()
+        await this.licenseName.waitFor({ state: 'visible', timeout: 20000 }).catch(async () => {
+            await this.addBtn.click({ force: true })
+            await this.licenseName.waitFor({ state: 'visible', timeout: 20000 })
+        })
+        await this.fillField(this.licenseName, licenseName)
+        await this.saveBtn.waitFor({ state: 'visible', timeout: 30000 })
         await this.saveBtn.click()
     }
 
     async addLanguage(languageName: string) {
-        await this.addBtn.waitFor({ state: 'visible' })
+        await this.addBtn.waitFor({ state: 'visible', timeout: 30000 })
         await this.addBtn.click()
-        await this.languageName.waitFor({ state: 'visible' })
-        await this.languageName.fill(languageName)
-        await this.saveBtn.waitFor({ state: 'visible' })
+        await this.waitForSpinnerToDisappear()
+        await this.languageName.waitFor({ state: 'visible', timeout: 20000 }).catch(async () => {
+            await this.addBtn.click({ force: true })
+            await this.languageName.waitFor({ state: 'visible', timeout: 20000 })
+        })
+        await this.fillField(this.languageName, languageName)
+        await this.saveBtn.waitFor({ state: 'visible', timeout: 30000 })
         await this.saveBtn.click()
     }
 

@@ -1,7 +1,7 @@
 import { Page, Locator, expect } from "@playwright/test"
+import { BasePage } from './BasePage'
 
-export class Admin_Jobs {
-    readonly page: Page
+export class Admin_Jobs extends BasePage {
     readonly clickAdmin: Locator
     readonly job: Locator
     readonly jobTitles: Locator
@@ -21,7 +21,7 @@ export class Admin_Jobs {
     readonly deleteSuccessMsg: Locator
 
     constructor(page: Page) {
-        this.page = page
+        super(page)
         this.clickAdmin = page.locator('b').filter({ hasText: 'Admin' })
         this.job = page.getByText('Job', { exact: true })
         this.jobTitles = page.getByRole('link', { name: 'Job Titles' })
@@ -42,47 +42,22 @@ export class Admin_Jobs {
     }
 
     async navToJobTitlesPage() {
-        await this.clickAdmin.waitFor({ state: 'visible' })
-        await this.clickAdmin.click()
-        await this.job.waitFor({ state: 'visible' })
-        await this.job.hover()
-        await this.jobTitles.waitFor({ state: 'visible' })
-        await this.jobTitles.click()
+        await this.navigateToAdminSubMenu(this.clickAdmin, this.job, this.jobTitles)
     }
 
     async navToPayGradesPage() {
-        await this.clickAdmin.waitFor({ state: 'visible' })
-        await this.clickAdmin.click()
-        await this.job.waitFor({ state: 'visible' })
-        await this.job.hover()
-        await this.payGrades.waitFor({ state: 'visible' })
-        await this.payGrades.click()
+        await this.navigateToAdminSubMenu(this.clickAdmin, this.job, this.payGrades)
     }
 
     async navToEmploymentStatusPage() {
-        await this.clickAdmin.waitFor({ state: 'visible' })
-        await this.clickAdmin.click()
-        await this.job.waitFor({ state: 'visible' })
-        await this.job.hover()
-        await this.employmentStatus.waitFor({ state: 'visible' })
-        await this.employmentStatus.click()
+        await this.navigateToAdminSubMenu(this.clickAdmin, this.job, this.employmentStatus)
     }
 
     async navToJobCategoriesPage() {
-        await this.clickAdmin.waitFor({ state: 'visible' })
-        await this.clickAdmin.click()
-        await this.job.waitFor({ state: 'visible' })
-        await this.job.hover()
-        await this.jobCategories.waitFor({ state: 'visible' })
-        await this.jobCategories.click()
+        await this.navigateToAdminSubMenu(this.clickAdmin, this.job, this.jobCategories)
     }
     async navToWorkShiftsPage() {
-        await this.clickAdmin.waitFor({ state: 'visible' })
-        await this.clickAdmin.click()
-        await this.job.waitFor({ state: 'visible' })
-        await this.job.hover()
-        await this.workShifts.waitFor({ state: 'visible' })
-        await this.workShifts.click()
+        await this.navigateToAdminSubMenu(this.clickAdmin, this.job, this.workShifts)
     }
 
     async addJobTitle(jobTitle: string, jobDescription: string, jobNote: string) {

@@ -1,8 +1,8 @@
 import { Page, Locator, expect } from "@playwright/test"
 import * as allure from "allure-js-commons";
+import { BasePage } from './BasePage'
 
-export class AddEmp {
-    readonly page: Page
+export class AddEmp extends BasePage {
     readonly clickPim: Locator
     readonly clickAdd: Locator
     readonly firstName: Locator
@@ -14,7 +14,7 @@ export class AddEmp {
     readonly duplicateError: Locator
 
     constructor(page: Page) {
-        this.page = page
+        super(page)
         this.clickPim = page.getByRole('link', { name: 'PIM' })
         this.clickAdd = page.locator('#btnAdd')
         this.firstName = page.locator("#firstName")
@@ -32,7 +32,7 @@ export class AddEmp {
         await this.clickPim.click()
         await expect(this.clickAdd).toBeVisible({ timeout: 30000 })
         await expect(this.clickAdd).toBeEnabled({ timeout: 30000 })
-        await this.page.locator('.modal-backdrop, .loading-mask, .spinner, .overlay').waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {})
+        await this.waitForSpinnerToDisappear()
         await this.clickAdd.click()
 
         await this.page.waitForLoadState('domcontentloaded')
@@ -52,7 +52,9 @@ export class AddEmp {
 
         await expect(this.employeeId).toBeVisible({ timeout: 30000 })
         await expect(this.employeeId).toHaveValue(/\d+/, { timeout: 30000 })
-        const expectEmpId = await this.employeeId.inputValue()
+        const expectEmpId = `${Date.now().toString().slice(-6)}`
+        await this.employeeId.fill(expectEmpId)
+        await expect(this.employeeId).toHaveValue(expectEmpId, { timeout: 30000 })
         await this.clickSave.waitFor({ state: 'visible', timeout: 30000 })
         await this.clickSave.click()
 

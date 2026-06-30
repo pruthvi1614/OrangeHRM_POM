@@ -1,9 +1,9 @@
 import { Page, Locator, expect } from "@playwright/test";
+import { BasePage } from './BasePage'
 
 //Create class for login page for admin
-export class AdminLogin {
+export class AdminLogin extends BasePage {
     //declare variables for login page
-    readonly page: Page
     readonly userNameInput: Locator
     readonly passwordInput: Locator
     readonly loginButton: Locator
@@ -11,7 +11,7 @@ export class AdminLogin {
     readonly logout: Locator
 
     constructor(page: Page) {
-        this.page = page
+        super(page)
         this.userNameInput = page.locator("#txtUsername")
         this.passwordInput = page.locator("#txtPassword")
         this.loginButton =  page.getByRole('button', { name: 'LOGIN', exact: true })
@@ -41,7 +41,7 @@ export class AdminLogin {
         if (this.page.url().includes('/auth/login')) {
             return
         }
-        await this.page.locator('.modal-backdrop, .loading-mask, .spinner, .overlay, .modal-backdrop.in').waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {})
+        await this.waitForSpinnerToDisappear()
         await this.welcomeMenu.waitFor({ state: 'visible', timeout: 20000 }).catch(() => null)
         if (!(await this.welcomeMenu.isVisible())) {
             return

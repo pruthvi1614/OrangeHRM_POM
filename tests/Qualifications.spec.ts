@@ -1,14 +1,14 @@
-import { test, expect, Page } from '@playwright/test'
-import { AdminLogin } from '../pages/AdminLogin'
+import { test, expect } from '../fixtures/loginFixture'
 import { Admin_Qualifications } from '../pages/Admin_Qualifications'
+import { AdminLogin } from '../pages/AdminLogin'
 import { ExcelFileUtil } from '../utils/ExcelFileUtil'
 import path from 'node:path'
+import type { Page } from '@playwright/test'
 
 
 const filePath = path.join(__dirname, '../testdata/ExData.xlsx')
 const sheetName = 'Qualifications'
 let qualificationData: any
-let page: Page
 
 
 try {
@@ -19,8 +19,9 @@ catch (message) {
 }
 
 test.describe("HRM Admin Qualifications module", () => {
-    let login: AdminLogin
     let adminQualifications: Admin_Qualifications
+    let login: AdminLogin
+    let page: Page
 
     test.beforeAll(async ({ browser }) => {
         page = await browser.newPage()
@@ -28,6 +29,15 @@ test.describe("HRM Admin Qualifications module", () => {
         adminQualifications = new Admin_Qualifications(page)
         await login.launchUrl(process.env.Base_Url!)
         await login.HRMLogin(process.env.Base_User!, process.env.Base_Pass!)
+    })
+
+    test.afterAll(async () => {
+        try {
+            await login.HRMLogout()
+            await page.close()
+        } catch (error) {
+            console.warn('Cleanup logout failed:', error)
+        }
     })
 
     test("Add skills with valid data", async () => {
@@ -168,12 +178,4 @@ test.describe("HRM Admin Qualifications module", () => {
     })
 
 
-    test.afterAll(async () => {
-        try {
-            await login.HRMLogout()
-            await page.close()
-        } catch (error) {
-            console.warn('Cleanup logout failed:', error)
-        }
-    })
 })
