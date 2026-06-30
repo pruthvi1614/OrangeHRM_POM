@@ -1,4 +1,4 @@
-import { test, expect,Page } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 import { AdminLogin } from '../pages/AdminLogin'
 import { Admin_Qualifications } from '../pages/Admin_Qualifications'
 import { ExcelFileUtil } from '../utils/ExcelFileUtil'
@@ -8,7 +8,7 @@ import path from 'node:path'
 const filePath = path.join(__dirname, '../testdata/ExData.xlsx')
 const sheetName = 'Qualifications'
 let qualificationData: any
-let page:Page
+let page: Page
 
 
 try {
