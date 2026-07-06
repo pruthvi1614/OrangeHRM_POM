@@ -26,15 +26,30 @@ npm install
 
 ### Configure environment
 
-Update environment variables in `utils/environment.env` or your preferred `.env` file.
+**SECURITY FIRST**: Credentials are sensitive and must NEVER be committed to git.
 
-Typical variables include:
+**Setup Steps:**
 
-```env
-Base_Url=
-Base_User=
-Base_Pass=
-```
+1. Copy the template file to create your local environment file:
+   ```bash
+   cp utils/environment.example.env utils/environment.env
+   ```
+
+2. Edit `utils/environment.env` and add your actual credentials:
+   ```env
+   Base_Url=http://orangehrm.qedgetech.com/
+   Base_User=Admin
+   Base_Pass=your_actual_password_here
+   ```
+
+3. **Important**: The `utils/environment.env` file is in `.gitignore` and will NOT be committed to git. This is intentional and keeps credentials secure.
+
+**For CI/CD Pipelines:**
+- Store credentials as GitHub Secrets / GitLab Variables / Jenkins credentials
+- Pass them as environment variables during test execution:
+  ```bash
+  Base_Url=${{ secrets.BASE_URL }} Base_User=${{ secrets.BASE_USER }} Base_Pass=${{ secrets.BASE_PASS }} npm run All-Test
+  ```
 
 ## Run Tests
 
@@ -97,6 +112,78 @@ Ensure the workspace uses the local TypeScript install and supports inline sugge
 - `Multiple-Excel` - Run the Excel data-driven spec.
 - `All-Test` - Run all Playwright tests.
 - `Allure-report` - Serve the Allure report.
+
+## Security Best Practices
+
+### Protecting Credentials
+
+⚠️ **CRITICAL**: Never commit credentials to version control. Follow these practices:
+
+#### 1. **Local Development**
+- Use `utils/environment.env` (added to `.gitignore`)
+- Each developer maintains their own local copy with actual credentials
+- Never share the `environment.env` file
+
+#### 2. **If Credentials Were Already Committed** (URGENT STEPS)
+If you've already pushed `environment.env` with credentials to the repository:
+
+```bash
+# Remove the file from git history completely
+git rm --cached utils/environment.env
+git commit -m "Remove environment.env with sensitive data"
+git push origin main
+
+# For shared repos, colleagues should rebase:
+git pull --rebase
+
+# IMPORTANT: Change the password immediately in the actual system!
+# Treat this as a security breach - any password committed to git should be rotated
+```
+
+Use [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/) for deeper cleaning:
+```bash
+bfg --delete-files environment.env
+```
+
+#### 3. **CI/CD Pipeline Setup**
+
+**GitHub Actions Example:**
+```yaml
+- name: Run Playwright Tests
+  env:
+    Base_Url: ${{ secrets.BASE_URL }}
+    Base_User: ${{ secrets.BASE_USER }}
+    Base_Pass: ${{ secrets.BASE_PASS }}
+  run: npm run All-Test
+```
+
+**GitLab CI Example:**
+```yaml
+test:
+  script:
+    - npm run All-Test
+  variables:
+    Base_Url: $CI_JOB_VARIABLE_BASE_URL
+    Base_User: $CI_JOB_VARIABLE_BASE_USER
+    Base_Pass: $CI_JOB_VARIABLE_BASE_PASS
+```
+
+#### 4. **Additional Security Layers**
+
+- **Rotate passwords regularly** (quarterly minimum)
+- **Use separate credentials** for dev/qa/staging/prod
+- **Enable 2FA** on critical accounts
+- **Use secret scanning tools** (Git has built-in secret scanning on GitHub)
+- **Audit git history** periodically: `git log --all -p -- utils/environment.env`
+
+### Verification
+
+Ensure your `.gitignore` contains:
+```
+utils/environment.env
+.env
+.env.local
+```
 
 ## Useful commands
 

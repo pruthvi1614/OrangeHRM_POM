@@ -10,5 +10,11 @@ test-reports/playwright-report/index.html
 /playwright/.auth/
 allure-results/
 
+# Environment & Credentials (NEVER commit credentials)
+utils/environment.env
+.env
+.env.local
+.env.*.local
+
 #git update-index --skip-worktree playwright.config.ts //to skip file from git track and git commit
 #git update-index --no-skip-worktree playwright.config.ts //Git to track changes again

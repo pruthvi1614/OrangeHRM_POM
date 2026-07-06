@@ -1,0 +1,64 @@
+#!/bin/bash
+# Pre-commit hook to prevent committing environment.env or other sensitive files
+# Install this by running: cp hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+# Colors for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+# Array of files that should NEVER be committed
+FORBIDDEN_FILES=(
+    "utils/environment.env"
+    ".env"
+    ".env.local"
+    "*.env.local"
+    "**/environment.env"
+)
+
+# Array of patterns that indicate secrets
+SECRET_PATTERNS=(
+    "password.*=.*"
+    "secret.*=.*"
+    "api_key.*=.*"
+    "token.*=.*"
+)
+
+echo -e "${YELLOW}🔒 Running security pre-commit hook...${NC}"
+
+# Check for forbidden files
+for file in "${FORBIDDEN_FILES[@]}"; do
+    if git diff --cached --name-only | grep -E "^$file$"; then
+        echo -e "${RED}❌ BLOCKED: Cannot commit '$file' - it contains sensitive credentials${NC}"
+        echo -e "${YELLOW}   Please use 'utils/environment.example.env' instead${NC}"
+        exit 1
+    fi
+done
+
+# Check for secret patterns in staged files
+echo -e "${YELLOW}Scanning for credential patterns...${NC}"
+
+FOUND_SECRETS=0
+for file in $(git diff --cached --name-only); do
+    if [[ ! "$file" =~ "environment.example.env" ]]; then
+        for pattern in "${SECRET_PATTERNS[@]}"; do
+            if git diff --cached -- "$file" | grep -iE "$pattern" | grep -v "^[[:space:]]*#"; then
+                echo -e "${RED}⚠️  WARNING: Possible credential pattern found in: $file${NC}"
+                echo -e "${YELLOW}   Pattern: $pattern${NC}"
+                FOUND_SECRETS=$((FOUND_SECRETS + 1))
+            fi
+        done
+    fi
+done
+
+if [ $FOUND_SECRETS -gt 0 ]; then
+    echo -e "${RED}❌ Found $FOUND_SECRETS potential credential patterns${NC}"
+    echo -e "${YELLOW}   Please remove these before committing${NC}"
+    echo -e "${YELLOW}   To bypass: git commit --no-verify${NC}"
+    echo -e "${RED}   (But you shouldn't need to!)${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Security check passed - safe to commit${NC}"
+exit 0
