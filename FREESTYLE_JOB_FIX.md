@@ -192,3 +192,21 @@ Script: Single-Data
 2. **Playwright browsers** are installed once and cached
 3. **environment.env** is created fresh on each build
 4. The `setup-jenkins.bat` file I created can be used as an alternative to Build Step 1-3 combined
+5. **Password with special characters**: If your password contains `#`, wrap it in quotes in `environment.env` (e.g., `Base_Pass="Qedge123!@#"`)
+6. **Error messages**: The code now provides clear error messages if credentials are missing, making debugging easier
+
+---
+
+## 🔍 Troubleshooting: "Login without username/password" Issue
+
+If your build is failing with login issues, check:
+
+1. **Jenkins Credentials**: Ensure `orangehrm-credentials` exists with correct ID
+2. **withCredentials block**: Build Step 3 must have "Use secret text(s) or file(s) from Jenkins" checked
+3. **Variable names**: Must be exactly `TEST_USER` and `TEST_PASS`
+4. **Environment variables**: The `set` commands in Build Step 3 must run before tests
+
+**Common error you'll see if credentials are missing:**
+```
+❌ Base_User environment variable is not set. Please configure it in Jenkins credentials or environment.env file.
+```
