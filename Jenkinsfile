@@ -164,17 +164,17 @@ pipeline {
                         
                         echo.
                         echo Parsing test results...
-                        powershell -ExecutionPolicy Bypass -File "%WORKSPACE_DIR%\jsonResultsForEmails.ps1"
+                        powershell -ExecutionPolicy Bypass -File "%WORKSPACE_DIR%/jsonResultsForEmails.ps1"
                         
                         echo.
                         echo Printing test summary...
-                        powershell -ExecutionPolicy Bypass -File "%WORKSPACE_DIR%\printResults.ps1"
+                        powershell -ExecutionPolicy Bypass -File "%WORKSPACE_DIR%/printResults.ps1"
                         
                         echo.
                         echo Verifying summary files...
-                        if exist "%WORKSPACE_DIR%\total.txt" (
+                        if exist "%WORKSPACE_DIR%/total.txt" (
                             echo ✅ Summary files created successfully
-                            type "%WORKSPACE_DIR%\test-summary.txt"
+                            type "%WORKSPACE_DIR%/test-summary.txt"
                         ) else (
                             echo ⚠️  Summary files not found
                         )
