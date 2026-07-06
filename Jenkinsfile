@@ -1,6 +1,20 @@
 pipeline {
     agent any
     
+    parameters {
+        choice(
+            name: 'SCRIPT_NAME',
+            choices: [
+                'All-Test',
+                'Single-Data',
+                'Multiple-Json',
+                'Multiple-Excel',
+                'Qualifications'
+            ],
+            description: 'Select which test script to run'
+        )
+    }
+    
     options {
         timestamps()
         timeout(time: 2, unit: 'HOURS')
@@ -11,6 +25,7 @@ pipeline {
         BASE_URL = 'http://orangehrm.qedgetech.com/'
         NODE_ENV = 'ci'
         WORKSPACE_DIR = "${WORKSPACE}"
+        SCRIPT_NAME = "${params.SCRIPT_NAME ?: 'All-Test'}"
     }
     
     stages {
@@ -93,6 +108,7 @@ pipeline {
                 script {
                     echo "=================================================="
                     echo "🧪 Stage 4: Run Playwright Tests"
+                    echo "Script: ${SCRIPT_NAME}"
                     echo "=================================================="
                     
                     withCredentials([
@@ -107,13 +123,14 @@ pipeline {
                             
                             echo Setting environment variables...
                             echo User: %TEST_USER%
+                            echo Script: %SCRIPT_NAME%
                             echo Running tests...
                             
                             set Base_Url=%BASE_URL%
                             set Base_User=%TEST_USER%
                             set Base_Pass=%TEST_PASS%
                             
-                            call npm run All-Test
+                            call npm run %SCRIPT_NAME%
                             if errorlevel 1 (
                                 echo ⚠️  Some tests may have failed (checking reports)
                             ) else (
@@ -154,6 +171,26 @@ pipeline {
                 echo "📈 Post Build: Publishing Reports"
                 echo "=================================================="
                 
+                // Generate test summary files
+                bat '''
+                    cd /d "%WORKSPACE_DIR%"
+                    
+                    REM Count test results
+                    REM These will be used in email report
+                    if exist "test-results\\results.json" (
+                        echo Generating test summary...
+                        for /f %%i in ('dir /s /b "test-results\\*.json" ^| find /c /v ""') do (
+                            echo %%i > total.txt
+                        )
+                    )
+                    
+                    REM Create placeholder files if they don't exist
+                    if not exist "passed.txt" echo 0 > passed.txt
+                    if not exist "failed.txt" echo 0 > failed.txt
+                    if not exist "skipped.txt" echo 0 > skipped.txt
+                    if not exist "total.txt" echo 0 > total.txt
+                '''
+                
                 // Publish test results
                 junit testResults: 'test-results/**/*.xml', 
                       allowEmptyResults: true,
@@ -164,7 +201,8 @@ pipeline {
                     test-results/**,
                     test-reports/**,
                     allure-report/**,
-                    allure-results/**
+                    allure-results/**,
+                    *.txt
                 ''', 
                 allowEmptyArchive: true
                 
@@ -187,39 +225,235 @@ pipeline {
         success {
             script {
                 echo "✅ BUILD SUCCESSFUL"
+                
                 emailext(
                     subject: "✅ Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: """
-                        Build: ${env.BUILD_URL}
+                    to: '${DEFAULT_RECIPIENTS}',
+                    mimeType: 'text/html',
+                    body: '''
+                        <div style="font-family:Segoe UI,Arial,sans-serif;background:#f4f6f9;padding:20px;">
+                        <div style="max-width:900px;margin:auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #dfe3e8;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
                         
-                        ✅ All Playwright tests completed
+                        <!-- Header -->
+                        <div style="background:linear-gradient(90deg,#0d6efd,#4f46e5);padding:25px;color:white;">
+                            <h1 style="margin:0;font-size:24px;">
+                                🚀 Playwright Automation Execution Report
+                            </h1>
+                            <p style="margin-top:8px;font-size:13px;opacity:0.9;">
+                                Automated Test Execution Summary
+                            </p>
+                        </div>
                         
-                        View Reports:
-                        - Playwright: ${env.BUILD_URL}Playwright_Test_Report/
-                        - Allure: ${env.BUILD_URL}Allure_Test_Report/
-                    """.stripIndent(),
-                    to: '${DEFAULT_RECIPIENTS}'
+                        <div style="padding:25px;">
+                        
+                            <!-- Build Information -->
+                            <h2 style="color:#0d6efd;margin-bottom:15px;">
+                                📋 Build Information
+                            </h2>
+                        
+                            <table width="100%" cellpadding="10" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;">
+                                <tr style="background:#f8fafc;">
+                                    <td width="30%"><b>Project Name</b></td>
+                                    <td>${PROJECT_NAME}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Build Number</b></td>
+                                    <td>#${BUILD_NUMBER}</td>
+                                </tr>
+                                <tr style="background:#f8fafc;">
+                                    <td><b>Build Status</b></td>
+                                    <td>
+                                        <span style="background:#28a745;color:white;padding:6px 15px;border-radius:20px;font-weight:bold;">
+                                            SUCCESS ✅
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><b>Build URL</b></td>
+                                    <td>
+                                        <a href="${BUILD_URL}" style="color:#0d6efd;">
+                                            Open Jenkins Build
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr style="background:#f8fafc;">
+                                    <td><b>Test Script</b></td>
+                                    <td>${SCRIPT_NAME}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Triggered By</b></td>
+                                    <td>${CAUSE}</td>
+                                </tr>
+                            </table>
+                        
+                            <br/>
+                        
+                            <!-- Quick Access Buttons -->
+                            <h2 style="color:#0d6efd;">
+                                🔗 Reports & Artifacts
+                            </h2>
+                        
+                            <table cellpadding="8">
+                                <tr>
+                                    <td>
+                                        <a href="${BUILD_URL}" style="background:#0d6efd;color:white;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:bold;">
+                                            Jenkins Build
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="${BUILD_URL}Allure_Test_Report" style="background:#6f42c1;color:white;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:bold;">
+                                            Allure Report
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="${BUILD_URL}Playwright_Test_Report" style="background:#198754;color:white;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:bold;">
+                                            Playwright Report
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="${BUILD_URL}console" style="background:#fd7e14;color:white;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:bold;">
+                                            Console Log
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        
+                            <br/>
+                        
+                            <!-- Footer -->
+                            <div style="border-top:1px solid #e5e7eb;padding-top:20px;color:#6b7280;font-size:13px;">
+                                Regards,<br/>
+                                <b>Jenkins CI/CD Pipeline</b><br/>
+                                Automated Notification System
+                            </div>
+                        
+                        </div>
+                        </div>
+                        </div>
+                    '''
                 )
             }
         }
         failure {
             script {
                 echo "❌ BUILD FAILED"
+                
                 emailext(
                     subject: "❌ Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: """
-                        Build: ${env.BUILD_URL}
+                    to: '${DEFAULT_RECIPIENTS}',
+                    mimeType: 'text/html',
+                    body: '''
+                        <div style="font-family:Segoe UI,Arial,sans-serif;background:#f4f6f9;padding:20px;">
+                        <div style="max-width:900px;margin:auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #dfe3e8;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
                         
-                        ❌ Build failed during test execution
+                        <!-- Header -->
+                        <div style="background:linear-gradient(90deg,#dc3545,#c82333);padding:25px;color:white;">
+                            <h1 style="margin:0;font-size:24px;">
+                                🚨 Playwright Automation Execution Report
+                            </h1>
+                            <p style="margin-top:8px;font-size:13px;opacity:0.9;">
+                                Automated Test Execution Summary
+                            </p>
+                        </div>
                         
-                        Check the console output at:
-                        ${env.BUILD_URL}console
+                        <div style="padding:25px;">
                         
-                        View Reports:
-                        - Playwright: ${env.BUILD_URL}Playwright_Test_Report/
-                        - Allure: ${env.BUILD_URL}Allure_Test_Report/
-                    """.stripIndent(),
-                    to: '${DEFAULT_RECIPIENTS}'
+                            <!-- Build Information -->
+                            <h2 style="color:#dc3545;margin-bottom:15px;">
+                                📋 Build Information
+                            </h2>
+                        
+                            <table width="100%" cellpadding="10" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;">
+                                <tr style="background:#f8fafc;">
+                                    <td width="30%"><b>Project Name</b></td>
+                                    <td>${PROJECT_NAME}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Build Number</b></td>
+                                    <td>#${BUILD_NUMBER}</td>
+                                </tr>
+                                <tr style="background:#fdeaea;">
+                                    <td><b>Build Status</b></td>
+                                    <td>
+                                        <span style="background:#dc3545;color:white;padding:6px 15px;border-radius:20px;font-weight:bold;">
+                                            FAILED ❌
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><b>Build URL</b></td>
+                                    <td>
+                                        <a href="${BUILD_URL}" style="color:#dc3545;">
+                                            Open Jenkins Build
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr style="background:#f8fafc;">
+                                    <td><b>Test Script</b></td>
+                                    <td>${SCRIPT_NAME}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Triggered By</b></td>
+                                    <td>${CAUSE}</td>
+                                </tr>
+                            </table>
+                        
+                            <br/>
+                        
+                            <!-- Quick Access Buttons -->
+                            <h2 style="color:#dc3545;">
+                                🔗 Reports & Artifacts
+                            </h2>
+                        
+                            <table cellpadding="8">
+                                <tr>
+                                    <td>
+                                        <a href="${BUILD_URL}" style="background:#dc3545;color:white;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:bold;">
+                                            Jenkins Build
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="${BUILD_URL}Allure_Test_Report" style="background:#6f42c1;color:white;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:bold;">
+                                            Allure Report
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="${BUILD_URL}Playwright_Test_Report" style="background:#198754;color:white;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:bold;">
+                                            Playwright Report
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="${BUILD_URL}console" style="background:#fd7e14;color:white;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:bold;">
+                                            Console Log
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        
+                            <br/>
+                        
+                            <!-- Build Log Preview -->
+                            <h2 style="color:#dc3545;">
+                                📄 Build Log Preview
+                            </h2>
+                        
+                            <div style="background:#1e293b;color:#e2e8f0;padding:15px;border-radius:8px;font-family:Consolas,monospace;font-size:12px;max-height:300px;overflow:auto;">
+                                ${BUILD_LOG,maxLines=50}
+                            </div>
+                        
+                            <br/>
+                        
+                            <!-- Footer -->
+                            <div style="border-top:1px solid #e5e7eb;padding-top:20px;color:#6b7280;font-size:13px;">
+                                Regards,<br/>
+                                <b>Jenkins CI/CD Pipeline</b><br/>
+                                Automated Notification System
+                            </div>
+                        
+                        </div>
+                        </div>
+                        </div>
+                    '''
                 )
             }
         }
