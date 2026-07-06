@@ -50,7 +50,7 @@ pipeline {
                         ) else (
                             if exist "utils\\environment.example.env" (
                                 copy utils\\environment.example.env utils\\environment.env
-                                echo ✅ Created utils\environment.env from template
+                                echo ✅ Created utils\\environment.env from template
                             ) else (
                                 echo ❌ ERROR: environment.example.env not found
                                 exit /b 1
