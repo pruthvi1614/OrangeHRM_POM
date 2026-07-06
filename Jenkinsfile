@@ -149,8 +149,11 @@ pipeline {
                     echo "📊 Stage 5: Generate Reports"
                     echo "=================================================="
                     
+                    // Run the PowerShell scripts to parse test results
+                    echo "Parsing test results with PowerShell scripts..."
                     bat '''
                         cd /d "%WORKSPACE_DIR%"
+                        
                         echo Generating Allure report...
                         call npx allure generate allure-results --clean -o allure-report
                         if errorlevel 1 (
@@ -158,47 +161,24 @@ pipeline {
                         ) else (
                             echo ✅ Allure report generated
                         )
+                        
+                        echo.
+                        echo Parsing test results...
+                        powershell -ExecutionPolicy Bypass -File "%WORKSPACE_DIR%\jsonResultsForEmails.ps1"
+                        
+                        echo.
+                        echo Printing test summary...
+                        powershell -ExecutionPolicy Bypass -File "%WORKSPACE_DIR%\printResults.ps1"
+                        
+                        echo.
+                        echo Verifying summary files...
+                        if exist "%WORKSPACE_DIR%\total.txt" (
+                            echo ✅ Summary files created successfully
+                            type "%WORKSPACE_DIR%\test-summary.txt"
+                        ) else (
+                            echo ⚠️  Summary files not found
+                        )
                     '''
-                    
-                    // Parse test results and generate summary files
-                    echo "Parsing test results..."
-                    def resultsFile = "${WORKSPACE_DIR}/test-results/results.json"
-                    if (fileExists(resultsFile)) {
-                        try {
-                            def jsonText = readFile(file: resultsFile)
-                            // Parse JSON using Groovy's built-in JSON support
-                            def slurper = new groovy.json.JsonSlurper()
-                            def results = slurper.parseText(jsonText)
-                            
-                            def total = results.stats.expected + results.stats.unexpected
-                            def passed = results.stats.expected
-                            def failed = results.stats.unexpected
-                            def skipped = 0
-                            
-                            writeFile file: "${WORKSPACE_DIR}/total.txt", text: "${total}"
-                            writeFile file: "${WORKSPACE_DIR}/passed.txt", text: "${passed}"
-                            writeFile file: "${WORKSPACE_DIR}/failed.txt", text: "${failed}"
-                            writeFile file: "${WORKSPACE_DIR}/skipped.txt", text: "${skipped}"
-                            
-                            echo "✅ Test Summary Generated:"
-                            echo "   Total: ${total}"
-                            echo "   Passed: ${passed}"
-                            echo "   Failed: ${failed}"
-                            echo "   Skipped: ${skipped}"
-                        } catch (Exception e) {
-                            echo "⚠️  Error parsing results.json: ${e.message}"
-                            writeFile file: "${WORKSPACE_DIR}/total.txt", text: "0"
-                            writeFile file: "${WORKSPACE_DIR}/passed.txt", text: "0"
-                            writeFile file: "${WORKSPACE_DIR}/failed.txt", text: "0"
-                            writeFile file: "${WORKSPACE_DIR}/skipped.txt", text: "0"
-                        }
-                    } else {
-                        echo "⚠️  Test results file not found, creating default summary..."
-                        writeFile file: "${WORKSPACE_DIR}/total.txt", text: "0"
-                        writeFile file: "${WORKSPACE_DIR}/passed.txt", text: "0"
-                        writeFile file: "${WORKSPACE_DIR}/failed.txt", text: "0"
-                        writeFile file: "${WORKSPACE_DIR}/skipped.txt", text: "0"
-                    }
                 }
             }
         }
