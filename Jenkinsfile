@@ -159,6 +159,34 @@ pipeline {
                             echo ✅ Allure report generated
                         )
                     '''
+                    
+                    // Parse test results and generate summary files
+                    echo "Parsing test results..."
+                    def resultsFile = "${WORKSPACE_DIR}/test-results/results.json"
+                    if (fileExists(resultsFile)) {
+                        def results = readJSON file: resultsFile
+                        def total = results.stats.expected + results.stats.unexpected
+                        def passed = results.stats.expected
+                        def failed = results.stats.unexpected
+                        def skipped = 0  // Playwright doesn't have skipped in this format
+                        
+                        writeFile file: "${WORKSPACE_DIR}/total.txt", text: "${total}"
+                        writeFile file: "${WORKSPACE_DIR}/passed.txt", text: "${passed}"
+                        writeFile file: "${WORKSPACE_DIR}/failed.txt", text: "${failed}"
+                        writeFile file: "${WORKSPACE_DIR}/skipped.txt", text: "${skipped}"
+                        
+                        echo "✅ Test Summary Generated:"
+                        echo "   Total: ${total}"
+                        echo "   Passed: ${passed}"
+                        echo "   Failed: ${failed}"
+                        echo "   Skipped: ${skipped}"
+                    } else {
+                        echo "⚠️  Test results file not found, creating default summary..."
+                        writeFile file: "${WORKSPACE_DIR}/total.txt", text: "0"
+                        writeFile file: "${WORKSPACE_DIR}/passed.txt", text: "0"
+                        writeFile file: "${WORKSPACE_DIR}/failed.txt", text: "0"
+                        writeFile file: "${WORKSPACE_DIR}/skipped.txt", text: "0"
+                    }
                 }
             }
         }
@@ -170,26 +198,6 @@ pipeline {
                 echo "=================================================="
                 echo "📈 Post Build: Publishing Reports"
                 echo "=================================================="
-                
-                // Generate test summary files
-                bat '''
-                    cd /d "%WORKSPACE_DIR%"
-                    
-                    REM Count test results
-                    REM These will be used in email report
-                    if exist "test-results\\results.json" (
-                        echo Generating test summary...
-                        for /f %%i in ('dir /s /b "test-results\\*.json" ^| find /c /v ""') do (
-                            echo %%i > total.txt
-                        )
-                    )
-                    
-                    REM Create placeholder files if they don't exist
-                    if not exist "passed.txt" echo 0 > passed.txt
-                    if not exist "failed.txt" echo 0 > failed.txt
-                    if not exist "skipped.txt" echo 0 > skipped.txt
-                    if not exist "total.txt" echo 0 > total.txt
-                '''
                 
                 // Publish test results
                 junit testResults: 'test-results/**/*.xml', 
@@ -283,6 +291,36 @@ pipeline {
                                 <tr>
                                     <td><b>Triggered By</b></td>
                                     <td>${CAUSE}</td>
+                                </tr>
+                            </table>
+                        
+                            <br/>
+                        
+                            <!-- Execution Summary -->
+                            <h2 style="color:#0d6efd;">
+                                📊 Test Execution Summary
+                            </h2>
+                        
+                            <table width="450" cellpadding="12" cellspacing="0" style="border-collapse:collapse;text-align:center;border:1px solid #dee2e6;">
+                                <tr style="background:#343a40;color:white;">
+                                    <th style="border:1px solid #dee2e6;">Metric</th>
+                                    <th style="border:1px solid #dee2e6;">Count</th>
+                                </tr>
+                                <tr>
+                                    <td style="border:1px solid #dee2e6;">Total Tests</td>
+                                    <td style="border:1px solid #dee2e6;">${FILE,path="total.txt"}</td>
+                                </tr>
+                                <tr style="background:#eafaf1;">
+                                    <td style="border:1px solid #dee2e6;color:#198754;"><b>Passed</b></td>
+                                    <td style="border:1px solid #dee2e6;color:#198754;"><b>${FILE,path="passed.txt"}</b></td>
+                                </tr>
+                                <tr style="background:#fdeaea;">
+                                    <td style="border:1px solid #dee2e6;color:#dc3545;"><b>Failed</b></td>
+                                    <td style="border:1px solid #dee2e6;color:#dc3545;"><b>${FILE,path="failed.txt"}</b></td>
+                                </tr>
+                                <tr style="background:#fff4db;">
+                                    <td style="border:1px solid #dee2e6;color:#ff9800;"><b>Skipped</b></td>
+                                    <td style="border:1px solid #dee2e6;color:#ff9800;"><b>${FILE,path="skipped.txt"}</b></td>
                                 </tr>
                             </table>
                         
@@ -395,6 +433,36 @@ pipeline {
                                 <tr>
                                     <td><b>Triggered By</b></td>
                                     <td>${CAUSE}</td>
+                                </tr>
+                            </table>
+                        
+                            <br/>
+                        
+                            <!-- Execution Summary -->
+                            <h2 style="color:#dc3545;">
+                                📊 Test Execution Summary
+                            </h2>
+                        
+                            <table width="450" cellpadding="12" cellspacing="0" style="border-collapse:collapse;text-align:center;border:1px solid #dee2e6;">
+                                <tr style="background:#343a40;color:white;">
+                                    <th style="border:1px solid #dee2e6;">Metric</th>
+                                    <th style="border:1px solid #dee2e6;">Count</th>
+                                </tr>
+                                <tr>
+                                    <td style="border:1px solid #dee2e6;">Total Tests</td>
+                                    <td style="border:1px solid #dee2e6;">${FILE,path="total.txt"}</td>
+                                </tr>
+                                <tr style="background:#eafaf1;">
+                                    <td style="border:1px solid #dee2e6;color:#198754;"><b>Passed</b></td>
+                                    <td style="border:1px solid #dee2e6;color:#198754;"><b>${FILE,path="passed.txt"}</b></td>
+                                </tr>
+                                <tr style="background:#fdeaea;">
+                                    <td style="border:1px solid #dee2e6;color:#dc3545;"><b>Failed</b></td>
+                                    <td style="border:1px solid #dee2e6;color:#dc3545;"><b>${FILE,path="failed.txt"}</b></td>
+                                </tr>
+                                <tr style="background:#fff4db;">
+                                    <td style="border:1px solid #dee2e6;color:#ff9800;"><b>Skipped</b></td>
+                                    <td style="border:1px solid #dee2e6;color:#ff9800;"><b>${FILE,path="skipped.txt"}</b></td>
                                 </tr>
                             </table>
                         
