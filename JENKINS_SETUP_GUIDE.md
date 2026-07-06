@@ -267,6 +267,68 @@ bat 'echo Build #${BUILD_NUMBER} running in ${WORKSPACE_DIR}'
 
 ---
 
+## 🛠️ FREESTYLE JOB CONFIGURATION (Alternative)
+
+If you prefer to keep using the **Freestyle job** instead of Pipeline, here's the complete configuration:
+
+### Build Steps (Add in this order):
+
+#### Build Step 1: Create environment.env
+```
+echo Creating environment.env from template...
+if not exist "utils\environment.env" (
+    copy utils\environment.example.env utils\environment.env
+)
+```
+
+#### Build Step 2: Inject Environment Variables
+- **Add build step:** "Inject environment variables"
+- **Properties Content:**
+```
+BASE_URL=http://orangehrm.qedgetech.com/
+```
+
+#### Build Step 3: Set Credentials
+- **Add build step:** "Execute Windows batch command"
+- **Check:** "Use secret text(s) or file(s) from Jenkins"
+- **Select:** `orangehrm-credentials`
+- **Command:**
+```batch
+set Base_Url=%BASE_URL%
+set Base_User=%TEST_USER%
+set Base_Pass=%TEST_PASS%
+```
+
+#### Build Step 4: Install Dependencies
+```
+call npm install
+```
+
+#### Build Step 5: Install Playwright Browsers
+```
+call npx playwright install --with-deps chromium
+```
+
+#### Build Step 6: Run Tests
+```
+call npm run clean-allure
+call npm run Single-Data
+```
+
+### Post-build Actions:
+1. **Allure Report Generation**
+   - Allure results: `allure-results`
+   - Report: `allure-report`
+
+2. **Publish HTML Report**
+   - HTML directory: `test-reports/playwright-report`
+   - Index file: `index.html`
+
+3. **Email Notification**
+   - Send email on failure
+
+---
+
 ## Quick Reference
 
 | Component | Value |
@@ -283,4 +345,3 @@ bat 'echo Build #${BUILD_NUMBER} running in ${WORKSPACE_DIR}'
 
 **Need help?** Check the Jenkins logs at:
 `Jenkins Dashboard → Your Job → Build → Console Output`
-
