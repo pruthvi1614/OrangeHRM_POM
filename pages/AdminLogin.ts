@@ -36,6 +36,17 @@ export class AdminLogin extends BasePage {
         await expect(this.welcomeMenu).toBeVisible()
     }
 
+    //method to verify API call status after login
+    async verifyEmployeeDistributionAPI(expectedStatus: number = 200) {
+        const response = await this.page.waitForResponse(
+            response => response.url().includes('employeeDistribution'),
+            { timeout: 15000 }
+        )
+        console.log("API Response Status: " + response.status())
+        expect(response.status()).toBe(expectedStatus)
+        return response
+    }
+
     //method for logout
     async HRMLogout() {
         if (this.page.url().includes('/auth/login')) {
@@ -54,4 +65,3 @@ export class AdminLogin extends BasePage {
     }
 
 }
-

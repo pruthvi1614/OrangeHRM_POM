@@ -35,6 +35,8 @@ export const test = base.extend<LoginFixtures>({
     const loginPage = new AdminLogin(page)
     await loginPage.launchUrl(baseUrl)
     await loginPage.HRMLogin(username, password)
+    // Verify API call after successful login
+    await loginPage.verifyEmployeeDistributionAPI(200)
     await use(loginPage)
     await loginPage.HRMLogout()
   },
