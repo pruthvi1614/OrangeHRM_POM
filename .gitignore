@@ -16,5 +16,14 @@ utils/environment.env
 .env.local
 .env.*.local
 
+# Local-only setup scripts (not needed in remote repo)
+setup-jenkins.bat
+setup.bat
+setup.sh
+
+# Local-only documentation (not needed in remote repo)
+CI_CD_SECURITY_CONFIGURATION.md
+JENKINS_SETUP_GUIDE.md
+
 #git update-index --skip-worktree playwright.config.ts //to skip file from git track and git commit
 #git update-index --no-skip-worktree playwright.config.ts //Git to track changes again
