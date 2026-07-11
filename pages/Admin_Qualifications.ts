@@ -166,26 +166,26 @@ export class Admin_Qualifications extends BasePage {
         await expect(this.page.locator('tbody tr').filter({ hasText: `${skillName}` })).toHaveCount(0, { timeout: 30000 })
     }
 
-    async skillAlreadyExistiMsg() {
+    async skillAlreadyExistMsg() {
         await expect(this.duplicateSkillErrorMsg).toBeVisible({ timeout: 15000 })
     }
 
-    async levelAlreadyExistiMsg() {
+    async levelAlreadyExistMsg() {
         await expect(this.duplicateLevelError).toBeVisible()
         await expect(this.duplicateLevelError).toContainText('Level Already Exists')
     }
 
-    async licenseAlreadyExistiMsg() {
+    async licenseAlreadyExistMsg() {
         await expect(this.duplicateLicenseError).toBeVisible()
         await expect(this.duplicateLicenseError).toContainText('Name Already Exists')
     }
 
-    async languagesAlreadyExistiMsg() {
+    async languagesAlreadyExistMsg() {
         await expect(this.duplicateLanguageError).toBeVisible()
         await expect(this.duplicateLanguageError).toContainText('Name Already Exists')
     }
 
-    async membershipsAlreadyExistiMsg() {
+    async membershipsAlreadyExistMsg() {
         await expect(this.duplicateMembershipError).toBeVisible()
         await expect(this.duplicateMembershipError).toContainText('Already exists')
     }

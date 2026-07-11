@@ -6,10 +6,15 @@ This repository contains a Playwright-based test automation framework for Orange
 
 - `pages/` - Page object classes for the OrangeHRM UI pages.
 - `tests/` - Playwright test files and test suites.
+- `fixtures/` - Test fixtures for reusable test setup and authentication.
 - `utils/` - Utility helpers such as Excel data readers and environment helpers.
 - `testdata/` - Test data files used by the suites (Excel, JSON, etc.).
+- `hooks/` - Git hooks for security (pre-commit hook to prevent credential leaks).
 - `playwright.config.ts` - Playwright configuration file.
 - `tsconfig.json` - TypeScript configuration.
+- `Jenkinsfile` - CI/CD pipeline configuration for Jenkins.
+- `printResults.ps1` - PowerShell script for parsing test results.
+- `jsonResultsForEmails.ps1` - PowerShell script for generating email reports.
 
 ## Getting Started
 
@@ -107,11 +112,12 @@ Ensure the workspace uses the local TypeScript install and supports inline sugge
 
 ## Project Scripts
 
-- `Single-Data` - Run a single data-driven spec.
-- `Multiple-Json` - Run the JSON data-driven spec.
-- `Multiple-Excel` - Run the Excel data-driven spec.
+- `Single-Data` - Run a single data-driven spec (HRMSingleData.spec.ts).
+- `Multiple-Json` - Run the JSON data-driven spec (MultipleDataUsingJson.spec.ts).
+- `Multiple-Excel` - Run the Excel data-driven spec (MultipleDataExcel.spec.ts).
 - `All-Test` - Run all Playwright tests.
 - `Allure-report` - Serve the Allure report.
+- `Qualifications` - Run the Qualifications test suite (tests/Qualifications.spec.ts).
 
 ## Security Best Practices
 
@@ -168,6 +174,13 @@ test:
     Base_Pass: $CI_JOB_VARIABLE_BASE_PASS
 ```
 
+**Jenkins Pipeline:**
+The project includes a `Jenkinsfile` for CI/CD integration. The pipeline:
+- Supports parameterized test selection (All-Test, Single-Data, Multiple-Json, Multiple-Excel, Qualifications)
+- Uses Jenkins credentials for secure authentication
+- Generates both Playwright HTML and Allure reports
+- Sends email notifications with test execution summary
+
 #### 4. **Additional Security Layers**
 
 - **Rotate passwords regularly** (quarterly minimum)
@@ -175,6 +188,21 @@ test:
 - **Enable 2FA** on critical accounts
 - **Use secret scanning tools** (Git has built-in secret scanning on GitHub)
 - **Audit git history** periodically: `git log --all -p -- utils/environment.env`
+
+### Git Hooks for Security
+
+A pre-commit hook is available in `hooks/pre-commit` to prevent accidental credential commits:
+
+```bash
+# Install the pre-commit hook
+cp hooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+This hook will:
+- Block commits containing `utils/environment.env` or other sensitive files
+- Scan for common credential patterns (password, secret, api_key, token)
+- Help maintain security best practices
 
 ### Verification
 
@@ -198,3 +226,4 @@ npx playwright show-report
 - Keep selectors stable and use Playwright locators
 - Use `await expect(locator).toBeVisible()` before interacting with elements to reduce flakiness
 - Add new test scenarios under `tests/`
+- Follow the existing test patterns using fixtures for authentication
